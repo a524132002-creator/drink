@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動飲料脈輪海報</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #FAF6F0;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .poster-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .poster-bg {
+            width: 100%;
+            display: block;
+        }
+
+        .drink-btn {
+            position: absolute;
+            background: rgba(255, 255, 255, 0);
+            border: none;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: background 0.3s;
+        }
+        .drink-btn:active, .drink-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* -----------------------------------------------
+           【已根據海報截圖精準計算座標：上排 3 杯，下排 4 杯】
+           ----------------------------------------------- */
+        /* 上排 3 杯 */
+        .drink-1 { top: 19%; left: 10%; width: 22%; height: 29%; } /* 元氣紅茶 */
+        .drink-2 { top: 19%; left: 36%; width: 22%; height: 29%; } /* 鮮桔氣泡特調 */
+        .drink-3 { top: 19%; left: 62%; width: 22%; height: 29%; } /* 黃金爆檸茶 */
+        
+        /* 下排 4 杯 */
+        .drink-4 { top: 53%; left: 6%;  width: 21%; height: 34%; } /* 翡翠檸檬綠 */
+        .drink-5 { top: 53%; left: 28%; width: 21%; height: 34%; } /* 藍柑橘海鹽蘇打 */
+        .drink-6 { top: 53%; left: 50%; width: 21%; height: 34%; } /* 蝶豆花輕機能飲 */
+        .drink-7 { top: 53%; left: 72%; width: 21%; height: 34%; } /* 醇香黑醋栗奶蓋 */
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-content {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .comic-img {
+            width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .drink-title {
+            font-size: 0.9rem;
+            color: #8E807E;
+            margin: 0 0 5px 0;
+            letter-spacing: 1px;
+        }
+        .quote-text {
+            font-size: 1.2rem;
+            color: #4A3E3D;
+            font-weight: bold;
+            line-height: 1.6;
+            margin: 0;
+            word-break: break-all;
+        }
+        .close-btn {
+            position: absolute;
+            top: 12px; right: 18px;
+            font-size: 28px;
+            color: #aaa;
+            cursor: pointer;
+            user-select: none;
+        }
+        .close-btn:hover { color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="poster-container">
+        <img src="poster.png" alt="互動飲料海報" class="poster-bg">
+
+        <button class="drink-btn drink-1" title="元氣紅茶" onclick="showRandomQuote(1)"></button>
+        <button class="drink-btn drink-2" title="鮮桔氣泡特調" onclick="showRandomQuote(2)"></button>
+        <button class="drink-btn drink-3" title="黃金爆檸茶" onclick="showRandomQuote(3)"></button>
+        <button class="drink-btn drink-4" title="翡翠檸檬綠" onclick="showRandomQuote(4)"></button>
+        <button class="drink-btn drink-5" title="藍柑橘海鹽蘇打" onclick="showRandomQuote(5)"></button>
+        <button class="drink-btn drink-6" title="蝶豆花輕機能飲" onclick="showRandomQuote(6)"></button>
+        <button class="drink-btn drink-7" title="醇香黑醋栗奶蓋" onclick="showRandomQuote(7)"></button>
+    </div>
+
+    <div id="quoteModal" class="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <img id="modalComic" class="comic-img" src="" alt="隨機漫畫">
+            <p id="modalTitle" class="drink-title">飲料名稱</p>
+            <p id="modalQuote" class="quote-text">載入中...</p>
+        </div>
+    </div>
+
+    <script>
+        const drinkData = {
+            1: {
+                title: "🔴 元氣紅茶 ｜ 海底輪",
+                quotes: [
+                    { img: "comic1-1.png", text: "跨出第一步的你，暢爽得無可取代！我有能力創造美好的一天。" },
+                    { img: "comic1-2.png", text: "有些靈感，是動手之後才冒出來的。" },
+                    { img: "comic1-3.png", text: "站穩腳步，大膽活出你的經典！我的存在本身就是最棒的禮物。" }
+                ]
+            },
+            2: {
+                title: "🟠 鮮桔氣泡特調 ｜ 生殖輪",
+                quotes: [
+                    { img: "comic2-1.png", text: "保持好奇，生活就是一場好玩的冒險！允許自己今天只負責快樂。" },
+                    { img: "comic2-2.png", text: "打破常規，你的創造力正在冒泡！我樂於分享我內心的喜悅與點子。" },
+                    { img: "comic2-3.png", text: "世界很大，好玩的事正在發生！我敞開心胸迎接生命中所有有趣的驚喜。" }
+                ]
+            },
+            3: {
+                title: "🟡 黃金爆檸茶 ｜ 太陽輪",
+                quotes: [
+                    { img: "comic3-1.png", text: "不需討好世界，酸甜都有風味！我的存在本身就是一道耀眼的光芒。" },
+                    { img: "comic3-2.png", text: "相信自己的直覺與力量，你遠比想像中更強大！今天我也為自己感到驕傲。" },
+                    { img: "comic3-3.png", text: "攤開自己的脆弱，也是強大的一部分。" }
+                ]
+            },
+            4: {
+                title: "🟢 翡翠檸檬綠 ｜ 心輪",
+                quotes: [
+                    { img: "comic4-1.png", text: "透亮看世界，世界就透亮！我允許自己卸下防備，享受當下的清爽。" },
+                    { img: "comic4-2.png", text: "對世界溫柔，但也別忘了好好愛自己！我的心充滿愛與平靜的能量。" },
+                    { img: "comic4-3.png", text: "像冰鎮手搖一樣，把緊繃的壓力通通釋放吧！我安然地接納現在的自己。" }
+                ]
+            },
+            5: {
+                title: "🔵 藍柑橘海鹽蘇打 ｜ 喉輪",
+                quotes: [
+                    { img: "comic5-1.png", text: "承認自己做不到，不也是一種勇敢？" },
+                    { img: "comic5-2.png", text: "如水般清澈，如氣泡般勇敢釋放！我能流暢且溫柔地說出內心的真話。" },
+                    { img: "comic5-3.png", text: "當你開始真誠溝通，全世界都會聽見你！我相信我言語的力量。" }
+                ]
+            },
+            6: {
+                title: "🔮 蝶豆花輕機能飲 ｜ 三眼輪",
+                quotes: [
+                    { img: "comic6-1.png", text: "在思緒的雜音中，聽從清澈的直覺！你其實早就知道通往幸福的答案。" },
+                    { img: "comic6-2.png", text: "為心靈補充電解質，看清方向再出發！我的內在智慧正引領我前進。" },
+                    { img: "comic6-3.png", text: "我有能力在紛亂中看清什麼最重要。" }
+                ]
+            },
+            7: {
+                title: "🟣 醇香黑醋栗奶蓋 ｜ 頂輪",
+                quotes: [
+                    { img: "comic7-1.png", text: "一切都可以是最好的安排。" },
+                    { img: "comic7-2.png", text: "我值得享受當下的美好。" },
+                    { img: "comic7-3.png", text: "信任生命的節奏，美好的事物正在路上！我全然接受屬於我的奇蹟與魔法。" }
+                ]
+            }
+        };
+
+        function showRandomQuote(drinkId) {
+            const drink = drinkData[drinkId];
+            if (!drink) return;
+
+            const items = drink.quotes;
+            const randomIndex = Math.floor(Math.random() * items.length);
+            const selected = items[randomIndex];
+
+            document.getElementById("modalComic").src = selected.img;
+            document.getElementById("modalTitle").innerText = drink.title;
+            document.getElementById("modalQuote").innerText = selected.text;
+
+            document.getElementById("quoteModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("quoteModal").style.display = "none";
+        }
+    </script>
+</body>
+</html>
